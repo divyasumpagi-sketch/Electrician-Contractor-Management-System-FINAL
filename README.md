@@ -20,9 +20,9 @@ Enterprise-level Electrician Contractor Management System built for **AXILEX PVT
 ## 👤 Demo Login Credentials
 | Role | Email | Password |
 |------|-------|----------|
-| **Admin** | `admin@axilex.com` | `Admin@123` |
-| **Client** | `client@axilex.com` | `Client@123` |
-| **Electrician** | `electrician@axilex.com` | `Elec@123` |
+| **Admin** | `admin@gmail.com` | `Admin@123` |
+| **Client** | `client@gamil.com` | `Client@123` |
+| **Electrician** | `electrician@agmail.com` | `Elec@123` |
 
 > Create these by running `python seed.py` after database setup.
 
