@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AxiLex | Client Dashboard</title>
+    <meta name="description" content="AxiLex Client Dashboard - Submit and track electrical service requests">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+    <div id="toast-container"></div>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="logo">⚡ AxiLex</div>
+            <ul class="nav-links">
+                <li><a href="#" class="active" id="nav-dash">Dashboard</a></li>
+                <li><a href="#" id="nav-requests">My Requests</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </aside>
+        
+        <main class="main-content">
+            <div class="header">
+                <h1 id="page-title">Client Dashboard</h1>
+                <div class="user-info" id="client-name">👤 Client</div>
+            </div>
+
+            <!-- New Request Form -->
+            <div id="content-dash">
+                <div class="card" style="max-width:100%; margin-bottom: 2rem;">
+                    <h2>Request a Service</h2>
+                    <form id="request-form">
+                        <div class="form-group">
+                            <label for="req-category">Service Category</label>
+                            <select id="req-category" class="form-control" required>
+                                <option value="WIRING">Wiring &amp; Installation</option>
+                                <option value="REPAIR">Repair &amp; Maintenance</option>
+                                <option value="INSPECTION">Inspection</option>
+                                <option value="PANEL_UPGRADE">Panel Upgrade</option>
+                                <option value="EMERGENCY">Emergency Service</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="req-desc">Issue Description</label>
+                            <textarea id="req-desc" class="form-control" rows="4" placeholder="Describe the electrical issue in detail..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn" id="submit-btn">Submit Request</button>
+                    </form>
+                </div>
+
+                <!-- Recent Requests Summary -->
+                <div class="card" style="max-width:100%;">
+                    <h2>Recent Requests</h2>
+                    <table>
+                        <thead>
+                            <tr><th>Category</th><th>Description</th><th>Status</th><th>Date</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="recent-requests-table">
+                            <tr><td colspan="4" style="text-align:center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- My Requests -->
+            <div id="content-requests" class="hidden">
+                <div class="card" style="max-width:100%;">
+                    <h2>All My Service Requests</h2>
+                    <table>
+                        <thead>
+                            <tr><th>ID</th><th>Category</th><th>Description</th><th>Status</th><th>Date</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="all-requests-table">
+                            <tr><td colspan="5" style="text-align:center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        checkAuth('CLIENT');
+
+        // ── Navigation ──
+        function switchSection(active, hidden) {
+            document.getElementById(active.nav).classList.add('active');
+            document.getElementById(hidden.nav).classList.remove('active');
+            document.getElementById(active.content).classList.remove('hidden');
+            document.getElementById(hidden.content).classList.add('hidden');
+            document.getElementById('page-title').textContent = active.title;
+        }
+
+        document.getElementById('nav-dash').addEventListener('click', () => {
+            switchSection(
+                { nav: 'nav-dash', content: 'content-dash', title: 'Client Dashboard' },
+                { nav: 'nav-requests', content: 'content-requests' }
+            );
+            loadRecentRequests();
+        });
+
+        document.getElementById('nav-requests').addEventListener('click', () => {
+            switchSection(
+                { nav: 'nav-requests', content: 'content-requests', title: 'My Requests' },
+                { nav: 'nav-dash', content: 'content-dash' }
+            );
+            loadAllRequests();
+        });
+
+        // ── Load Client Info ──
+        async function loadClientInfo() {
+            try {
+                const me = await apiCall('/users/me');
+                document.getElementById('client-name').textContent = '👤 ' + me.name;
+            } catch(e) {}
+        }
+
+        // ── Render Requests Table ──
+        function renderRequestsTable(requests, tbodyId, showId = false) {
+            const tbody = document.getElementById(tbodyId);
+            if (!requests.length) {
+                const cols = showId ? 5 : 4;
+                tbody.innerHTML = `<tr><td colspan="${cols}" style="text-align:center; color:var(--text-secondary)">No requests found. Submit one above!</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = requests.map(r => {
+                const statusClass = {
+                    PENDING: 'status-pending',
+                    ASSIGNED: 'status-assigned',
+                    IN_PROGRESS: 'status-inprogress',
+                    COMPLETED: 'status-completed',
+                    CANCELLED: 'status-cancelled',
+                }[r.status] || '';
+                const date = new Date(r.created_at).toLocaleDateString('en-IN', {
+                    day: '2-digit', month: 'short', year: 'numeric'
+                });
+                const desc = r.description.length > 50 ? r.description.substring(0, 50) + '...' : r.description;
+                
+                let actionBtn = '';
+                if (r.status !== 'COMPLETED' && r.status !== 'CANCELLED') {
+                    actionBtn = `<button class="btn-sm" onclick="initiatePayment(${r.id})">💳 Pay</button>`;
+                }
+
+                return `<tr>
+                    ${showId ? `<td>#${r.id}</td>` : ''}
+                    <td>${r.category}</td>
+                    <td title="${r.description}">${desc}</td>
+                    <td><span class="status-badge ${statusClass}">${r.status}</span></td>
+                    <td>${date}</td>
+                    <td>${actionBtn}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function initiatePayment(requestId) {
+            try {
+                // 1. Create Order on Backend
+                // For demo purposes, we'll use a fixed amount of 500 INR
+                const amount = 500;
+                const order = await apiCall('/payments/create-order', 'POST', { 
+                    request_id: requestId, 
+                    amount: amount 
+                });
+
+                // 2. Open Razorpay Checkout
+                const options = {
+                    key: 'rzp_test_Sp9EJx6MCtAcY1', // From your .env
+                    amount: order.amount,
+                    currency: order.currency,
+                    name: "AxiLex Services",
+                    description: `Payment for Service Request #${requestId}`,
+                    order_id: order.id,
+                    handler: async function (response) {
+                        // 3. Verify Payment on Backend
+                        try {
+                            const verifyResult = await apiCall('/payments/verify', 'POST', {
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                                request_id: requestId
+                            });
+                            showToast('Payment Successful! Job status updated.', 'success');
+                            loadRecentRequests();
+                        } catch (e) {
+                            showToast('Payment verification failed', 'error');
+                        }
+                    },
+                    prefill: {
+                        name: localStorage.getItem('userName') || '',
+                        email: localStorage.getItem('userEmail') || ''
+                    },
+                    theme: {
+                        color: "#6366f1"
+                    }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.open();
+
+            } catch (error) {
+                showToast('Failed to initiate payment', 'error');
+            }
+        }
+
+        async function loadRecentRequests() {
+            try {
+                const requests = await apiCall('/requests/my');
+                renderRequestsTable(requests.slice(0, 5), 'recent-requests-table');
+            } catch(e) {
+                document.getElementById('recent-requests-table').innerHTML =
+                    '<tr><td colspan="4" style="text-align:center; color:var(--danger)">Failed to load</td></tr>';
+            }
+        }
+
+        async function loadAllRequests() {
+            try {
+                const requests = await apiCall('/requests/my');
+                renderRequestsTable(requests, 'all-requests-table', true);
+            } catch(e) {
+                document.getElementById('all-requests-table').innerHTML =
+                    '<tr><td colspan="5" style="text-align:center; color:var(--danger)">Failed to load</td></tr>';
+            }
+        }
+
+        // ── Submit Service Request ──
+        document.getElementById('request-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const category = document.getElementById('req-category').value;
+            const description = document.getElementById('req-desc').value;
+
+            btn.textContent = 'Submitting...';
+            btn.disabled = true;
+
+            try {
+                await apiCall('/requests', 'POST', { category, description });
+                showToast('Service request submitted successfully!', 'success');
+                document.getElementById('request-form').reset();
+                loadRecentRequests();
+            } catch(e) {
+                // error already shown by apiCall
+            } finally {
+                btn.textContent = 'Submit Request';
+                btn.disabled = false;
+            }
+        });
+
+        // ── Init ──
+        loadClientInfo();
+        loadRecentRequests();
+    </script>
+</body>
+</html>

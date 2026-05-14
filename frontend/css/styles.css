@@ -1,0 +1,377 @@
+/* Enterprise Modern Dark Theme with Blue Accents */
+:root {
+    --bg-dark: #0f172a;
+    --bg-card: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --accent-blue: #3b82f6;
+    --accent-blue-hover: #2563eb;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --warning: #eab308;
+    --border: #334155;
+    --font-family: 'Inter', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+a {
+    text-decoration: none;
+    color: var(--accent-blue);
+}
+
+a:hover {
+    color: var(--accent-blue-hover);
+}
+
+/* Layouts */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.auth-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    width: 100%;
+    max-width: 400px;
+}
+
+.card h2 {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.btn {
+    display: inline-block;
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background-color: var(--accent-blue);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    text-align: center;
+}
+
+.btn:hover {
+    background-color: var(--accent-blue-hover);
+}
+
+/* Dashboard Layout */
+.dashboard {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: var(--bg-card);
+    border-right: 1px solid var(--border);
+    padding: 2rem 1rem;
+}
+
+.sidebar .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--accent-blue);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.nav-links {
+    list-style: none;
+}
+
+.nav-links li {
+    margin-bottom: 0.5rem;
+}
+
+.nav-links a {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--accent-blue);
+}
+
+.main-content {
+    flex: 1;
+    padding: 2rem;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background-color: var(--bg-card);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.stat-card h3 {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card .value {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+th,
+td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+th {
+    background-color: rgba(0, 0, 0, 0.2);
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* Toast Notifications */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.toast {
+    background-color: var(--bg-card);
+    border-left: 4px solid var(--accent-blue);
+    color: var(--text-primary);
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease-out;
+}
+
+.toast.error {
+    border-left-color: var(--danger);
+}
+
+.toast.success {
+    border-left-color: var(--success);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Utilities */
+.hidden {
+    display: none !important;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background-color: rgba(148, 163, 184, 0.15);
+    color: var(--text-secondary);
+}
+
+.status-pending {
+    background-color: rgba(234, 179, 8, 0.15);
+    color: #eab308;
+}
+
+.status-assigned {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+}
+
+.status-inprogress {
+    background-color: rgba(168, 85, 247, 0.15);
+    color: #a855f7;
+}
+
+.status-completed {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+}
+
+.status-cancelled {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.status-approved {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+}
+
+.status-rejected {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+/* Role Badges */
+.role-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.role-admin {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.role-client {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+}
+
+.role-electrician {
+    background-color: rgba(234, 179, 8, 0.15);
+    color: #eab308;
+}
+
+/* Small Action Buttons */
+.btn-sm {
+    padding: 0.3rem 0.75rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    margin-right: 0.25rem;
+}
+
+.btn-sm:hover {
+    opacity: 0.85;
+}
+
+.btn-success {
+    background-color: var(--success);
+    color: #fff;
+}
+
+.btn-danger {
+    background-color: var(--danger);
+    color: #fff;
+}
+
+.btn-primary {
+    background-color: var(--accent-blue);
+    color: #fff;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}

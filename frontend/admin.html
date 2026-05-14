@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AxiLex | Admin Dashboard</title>
+    <meta name="description" content="AxiLex Admin Dashboard - Manage users, service requests and payments">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="toast-container"></div>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="logo">⚡ AxiLex</div>
+            <ul class="nav-links">
+                <li><a href="#" class="active" id="nav-dash">Dashboard</a></li>
+                <li><a href="#" id="nav-users">Electrician Approvals</a></li>
+                <li><a href="#" id="nav-requests">Service Requests</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </aside>
+        
+        <main class="main-content">
+            <div class="header">
+                <h1 id="page-title">Admin Dashboard</h1>
+                <div class="user-info" id="admin-name">👤 Admin</div>
+            </div>
+
+            <!-- Dashboard Stats -->
+            <div id="content-dash">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Users</h3>
+                        <div class="value" id="stat-users">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Pending Requests</h3>
+                        <div class="value" id="stat-requests">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Completed Jobs</h3>
+                        <div class="value" id="stat-jobs">—</div>
+                    </div>
+                </div>
+
+                <div class="card" style="max-width:100%; margin-top:2rem;">
+                    <h2>All Registered Users</h2>
+                    <table>
+                        <thead>
+                            <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr>
+                        </thead>
+                        <tbody id="all-users-table">
+                            <tr><td colspan="4" style="text-align:center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Electrician Approvals -->
+            <div id="content-users" class="hidden">
+                <div class="card" style="max-width: 100%;">
+                    <h2>Electrician Approvals</h2>
+                    <table>
+                        <thead>
+                            <tr><th>Name</th><th>Email</th><th>Specialization</th><th>Status</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="electricians-table">
+                            <tr><td colspan="5" style="text-align:center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Service Requests -->
+            <div id="content-requests" class="hidden">
+                <div class="card" style="max-width: 100%;">
+                    <h2>All Service Requests</h2>
+                    <p style="color:var(--text-secondary); font-size:0.875rem; margin-bottom:1rem;">
+                        Viewing all client-submitted requests across the platform.
+                    </p>
+                    <div id="admin-requests-info" style="padding:2rem; text-align:center; color:var(--text-secondary);">
+                        Service request management view coming from client submissions.
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        checkAuth('ADMIN');
+
+        // ── Navigation ──
+        const sections = {
+            dash: { nav: 'nav-dash', content: 'content-dash', title: 'Admin Dashboard' },
+            users: { nav: 'nav-users', content: 'content-users', title: 'Electrician Approvals' },
+            requests: { nav: 'nav-requests', content: 'content-requests', title: 'Service Requests' },
+        };
+
+        function switchSection(key) {
+            Object.keys(sections).forEach(k => {
+                document.getElementById(sections[k].nav).classList.remove('active');
+                document.getElementById(sections[k].content).classList.add('hidden');
+            });
+            document.getElementById(sections[key].nav).classList.add('active');
+            document.getElementById(sections[key].content).classList.remove('hidden');
+            document.getElementById('page-title').textContent = sections[key].title;
+        }
+
+        document.getElementById('nav-dash').addEventListener('click', () => {
+            switchSection('dash');
+            loadStats();
+            loadAllUsers();
+        });
+        document.getElementById('nav-users').addEventListener('click', () => {
+            switchSection('users');
+            loadElectricians();
+        });
+        document.getElementById('nav-requests').addEventListener('click', () => {
+            switchSection('requests');
+        });
+
+        // ── Load Admin Name ──
+        async function loadAdminInfo() {
+            try {
+                const me = await apiCall('/users/me');
+                document.getElementById('admin-name').textContent = '👤 ' + me.name;
+            } catch(e) {}
+        }
+
+        // ── Load Stats ──
+        async function loadStats() {
+            try {
+                const stats = await apiCall('/admin/stats');
+                document.getElementById('stat-users').textContent = stats.total_users;
+                document.getElementById('stat-requests').textContent = stats.pending_requests;
+                document.getElementById('stat-jobs').textContent = stats.completed_jobs;
+            } catch(e) {
+                console.error('Stats load error:', e);
+            }
+        }
+
+        // ── Load All Users ──
+        async function loadAllUsers() {
+            const tbody = document.getElementById('all-users-table');
+            try {
+                const users = await apiCall('/admin/users');
+                if (!users.length) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No users found</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = users.map(u => `
+                    <tr>
+                        <td>${u.name}</td>
+                        <td>${u.email}</td>
+                        <td><span class="role-badge role-${u.role.toLowerCase()}">${u.role}</span></td>
+                        <td><span class="status-badge">${u.is_active ? '✅ Active' : '❌ Inactive'}</span></td>
+                    </tr>
+                `).join('');
+            } catch(e) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--danger)">Failed to load users</td></tr>';
+            }
+        }
+
+        // ── Load Electricians ──
+        async function loadElectricians() {
+            const tbody = document.getElementById('electricians-table');
+            try {
+                const elecs = await apiCall('/admin/electricians');
+                if (!elecs.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No electricians registered</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = elecs.map(e => `
+                    <tr>
+                        <td>${e.user.name}</td>
+                        <td>${e.user.email}</td>
+                        <td>${e.specialization || '—'}</td>
+                        <td><span class="status-badge status-${e.approval_status.toLowerCase()}">${e.approval_status}</span></td>
+                        <td>
+                            ${e.approval_status !== 'APPROVED'
+                                ? `<button class="btn-sm btn-success" onclick="approveElectrician(${e.user_id})">Approve</button>`
+                                : ''}
+                            ${e.approval_status !== 'REJECTED'
+                                ? `<button class="btn-sm btn-danger" onclick="rejectElectrician(${e.user_id})">Reject</button>`
+                                : ''}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch(e) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--danger)">Failed to load electricians</td></tr>';
+            }
+        }
+
+        async function approveElectrician(userId) {
+            try {
+                await apiCall(`/admin/electricians/${userId}/approve`, 'PATCH');
+                showToast('Electrician approved!', 'success');
+                loadElectricians();
+            } catch(e) {}
+        }
+
+        async function rejectElectrician(userId) {
+            try {
+                await apiCall(`/admin/electricians/${userId}/reject`, 'PATCH');
+                showToast('Electrician rejected.', 'error');
+                loadElectricians();
+            } catch(e) {}
+        }
+
+        // ── Init ──
+        loadAdminInfo();
+        loadStats();
+        loadAllUsers();
+    </script>
+</body>
+</html>
