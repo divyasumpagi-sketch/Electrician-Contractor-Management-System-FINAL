@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8000';
+const API_URL = 'https://electrician-backend-325w.onrender.com';
 
 // Central API handler
 async function apiCall(endpoint, method = 'GET', data = null) {
